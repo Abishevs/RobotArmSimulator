@@ -1,23 +1,10 @@
-import sys
-from typing import List
-import numpy as np
-import time
-import math
-from itertools import tee, zip_longest
-
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
+from PySide6.QtWidgets import ( QMainWindow, QWidget, QVBoxLayout, 
                                QHBoxLayout, QSlider, QLineEdit, QLabel, QPushButton)
-from PySide6.QtCore import (Qt, QTimer, Property, QObject, QPropertyAnimation, Signal)
-
-
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtGui import ( QMatrix4x4, QColor, QQuaternion, QVector3D)
-
-# from PySide6.QtCore import Qt
+from PySide6.QtCore import (Qt, Signal)
+from PySide6 import QtGui
+from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DCore import Qt3DCore
-from PySide6.Qt3DRender import Qt3DRender
 from PySide6.Qt3DExtras import Qt3DExtras
-
 from PySide6 import QtGui
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QVector3D
@@ -25,8 +12,8 @@ from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QMainWindow, QSlider, QWidget
 
-from robo_arm_sim.controllers import RoboticArm
 from robo_arm_sim.entities import ArmSegment, BaseEntity
+from robo_arm_sim.robotic_arm import RoboticArm
 
 class SimWindow(Qt3DExtras.Qt3DWindow):
     def __init__(self):
@@ -89,22 +76,6 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
                                               length=100,
                                               jointP=QVector3D(150, 0, 0),
                                               ))
-        # segment1 = ArmSegment(parent=self.rootEntity,
-        #                                       path_to_model="3DModels/segment1.stl",
-        #                                       position=QVector3D(0, 0, 0),
-        #                                       )
-        # # print(base.children())
-        # self.robot_arm.add_segment(segment1)
-        # segment2 = ArmSegment(self.rootEntity,
-        #                                       path_to_model="3DModels/segment2.stl",
-        #                                       position=QVector3D(0, 0, 0),
-        #                                       )
-        # self.robot_arm.add_segment(segment2)
-        # end_effector = ArmSegment(self.rootEntity,
-        #                                       path_to_model="3DModels/end_effector.stl",
-        #                                       position=QVector3D(0, 0, -2),
-        #                                       )
-        # self.robot_arm.add_segment(end_effector)
 
     def setupGroundPlane(self):
         self.groundEntity = Qt3DCore.QEntity(self.rootEntity)

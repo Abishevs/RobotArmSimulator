@@ -1,6 +1,8 @@
 import sys
 from PySide6.QtWidgets import QApplication
-from robo_arm_sim.windows import MainWindow
+
+from robo_arm_sim.views import MainWindow
+
 
 def main():
     app = QApplication(sys.argv)

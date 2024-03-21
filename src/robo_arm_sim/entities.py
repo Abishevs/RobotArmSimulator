@@ -1,24 +1,30 @@
-import sys
-from typing import List
 import numpy as np
-import time
 import math
-from itertools import tee, zip_longest
 
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
-                               QHBoxLayout, QSlider, QLineEdit, QLabel, QPushButton)
-from PySide6.QtCore import (Qt, QTimer, Property, QObject, QPropertyAnimation, Signal)
-
-
-from PySide6 import QtWidgets, QtGui, QtCore
-from PySide6.QtGui import ( QMatrix4x4, QColor, QQuaternion, QVector3D)
-
-# from PySide6.QtCore import Qt
+from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DCore import Qt3DCore
-from PySide6.Qt3DRender import Qt3DRender
 from PySide6.Qt3DExtras import Qt3DExtras
 
 from robo_arm_sim.controllers import JointTransformController
+
+class GenericEntity(Qt3DCore.QEntity):
+    def __init__(self, 
+                 parent=None,
+                 color:str = "yellow",
+                 scale:float = 0.1,
+                 name:str = "Base",
+                 ) -> None:
+        super().__init__(parent)
+        self.color    = color
+        self.scale    = scale
+        self.name     = name
+        self.material = Qt3DExtras.QPhongMaterial()
+        self.material.setDiffuse(QColor(self.color))
+
+    def setup_mesh(self, mesh):
+        self.mesh = mesh
+        self.addComponent(self.mesh)
+
 
 class BaseEntity(Qt3DCore.QEntity):
     """Default Base for robotic arm. For connecting the first element
@@ -176,16 +182,8 @@ class ArmSegment(Qt3DCore.QEntity):
         self.controller.setRotationPoint(self.jointP)
         # self.controller.setAngle(45)
         # print(f"Start pos: {self.jointP}")
-        # self.sphereRotateTransformAnimation = QPropertyAnimation(self.segment_transform)
-        # self.sphereRotateTransformAnimation.setTargetObject(self.controller)
-        # self.sphereRotateTransformAnimation.setPropertyName(b"angle")
-        # self.sphereRotateTransformAnimation.setStartValue(0)
-        # self.sphereRotateTransformAnimation.setEndValue(360)
-        # self.sphereRotateTransformAnimation.setDuration(10000)
-        # self.sphereRotateTransformAnimation.setLoopCount(-1)
-        # self.sphereRotateTransformAnimation.start()
-
         # self.addComponent(self.segment_mesh)
+
         self.addComponent(self.material)
         self.addComponent(self.segment_transform)
 
