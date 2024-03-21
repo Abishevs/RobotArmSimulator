@@ -3,7 +3,6 @@ from PySide6.QtWidgets import QApplication
 
 from robo_arm_sim.views import MainWindow
 
-
 def main():
     app = QApplication(sys.argv)
     window = MainWindow()

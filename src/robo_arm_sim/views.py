@@ -12,7 +12,7 @@ from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QLineEdit, QMainWindow, QSlider, QWidget
 
-from robo_arm_sim.entities import ArmSegment, BaseEntity
+from robo_arm_sim.entities import ArmSegment, BasePlate, EndEffector
 from robo_arm_sim.robotic_arm import RoboticArm
 
 class SimWindow(Qt3DExtras.Qt3DWindow):
@@ -52,13 +52,13 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
 
     def setupModels(self):
         self.robot_arm = RoboticArm()
-        base = BaseEntity(self.rootEntity)
+        base = BasePlate(self.rootEntity)
         self.robot_arm.add_base(base)
         self.robot_arm.add_segment(ArmSegment(self.rootEntity,
                                               name="Segment1",
                                               color="yellow",
                                               length=50,
-                                              path_to_model="stl/segment1.stl",
+                                              # path_to_model="stl/segment1.stl",
                                               jointP=QVector3D(0, 0, 0),
                                               # position=QVector3D(0, 0, 0),
                                               ))
@@ -66,14 +66,11 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
                                               name="Segment2",
                                               color="red",
                                               length=100,
-                                              path_to_model="stl/segment2.stl",
                                               jointP=QVector3D(50, 0, 0),
                                               ))
-        self.robot_arm.add_segment(ArmSegment(self.rootEntity,
+        self.robot_arm.add_segment(EndEffector(self.rootEntity,
                                               name="End_effector",
                                               color="blue",
-                                              path_to_model="stl/end_effector.stl",
-                                              length=100,
                                               jointP=QVector3D(150, 0, 0),
                                               ))
 

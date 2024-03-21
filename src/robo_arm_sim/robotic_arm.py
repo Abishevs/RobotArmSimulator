@@ -5,14 +5,14 @@ import math
 from PySide6.QtCore import (QObject, QPropertyAnimation, Signal)
 from PySide6.QtGui import (QVector3D)
 
-from robo_arm_sim.entities import ArmSegment, BaseEntity
+from robo_arm_sim.entities import ArmSegment, BasePlate
 
 class RoboticArm(QObject):
     def __init__(self):
-        self.base: BaseEntity
+        self.base: BasePlate
         self.segments: List[ArmSegment] = []
 
-    def add_base(self, base: BaseEntity):
+    def add_base(self, base: BasePlate):
         self.base = base
 
     def add_segment(self, segment):
