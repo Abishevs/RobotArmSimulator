@@ -15,9 +15,12 @@ class GenericEntity:
         self.entity = Qt3DCore.QEntity(parent)
         self.color = color
         self.scale = scale    # 3D worlds scale
+        self.theta = 0 # Rotation angle relative to x-axis
+        self.length = 0
         self.name = name     # Identifier
         self.position = position # mesh local origin position in 3D world
-        self.jointP = jointP   # Pivot point for next segment to attach to 
+        self.jointP = jointP   # Pivot point for curr segment 
+        self.endP = QVector3D() # curr seg point that next seg attaches to
 
         # Setup material
         self.material = Qt3DExtras.QPhongMaterial()
@@ -43,6 +46,15 @@ class GenericEntity:
     def set_position(self, new_position: QVector3D):
         self.position = new_position
         self.transform.setTranslation(self.position)
+
+    def get_endp_str(self):
+        x = self.endP.x()
+        y = self.endP.y()
+        x,y = f"{x:.2f}", f"{y:.2f}"
+        return x,y
+    
+    def get_theta_str(self):
+        return f"{self.theta:.2f}"
 
 class Joint(GenericEntity):
     def __init__(self, 
@@ -75,36 +87,35 @@ class ArmSegment(GenericEntity):
                  position: QVector3D = QVector3D(0, 0, 0),
                  jointP: QVector3D = QVector3D(0, 0, 0)) -> None:
         super().__init__(parent, color, scale, name, position, jointP)
-        self.theta = theta
+        self.theta = theta # Cmposed angle, world rota
         self.length = length
+        self.endP = QVector3D() 
 
         self.joint = Joint(parent=self.entity, jointP=self.jointP)  
+        self.transform.setTranslation(self.jointP)
 
         # Cuboid (Arm segment)
-        self.cuboidMesh = Qt3DExtras.QCuboidMesh()
-        self.cuboidMesh.setXExtent(self.length)  # Length of the arm segment
-        self.cuboidMesh.setYExtent(9)  # Thickness of the arm segment
-        self.cuboidMesh.setZExtent(9)  # Depth of the arm segment
+        self.arm_mesh = Qt3DExtras.QCuboidMesh()
+        self.arm_mesh.setXExtent(self.length)  # Length of the arm segment
+        self.arm_mesh.setYExtent(9)  # Thickness of the arm segment
+        self.arm_mesh.setZExtent(9)  # Depth of the arm segment
 
         # Transform
-        self.cuboidTransform = Qt3DCore.QTransform()
-        self.cuboidTransform.setTranslation(QVector3D(self.length / 2, 0, 0))  # Position the cuboid next to the sphere
+        self.arm_transform = Qt3DCore.QTransform()
+        self.arm_transform.setTranslation(QVector3D(self.length / 2, 0, 0))  # Position the cuboid next to the sphere
 
-        # Entity
-        self.cuboidEntity = Qt3DCore.QEntity(self.entity)
-        self.cuboidEntity.addComponent(self.cuboidMesh)
-        self.cuboidEntity.addComponent(self.material)
-        self.cuboidEntity.addComponent(self.cuboidTransform)
+        # Create new arm Entity
+        self.arm_entity = Qt3DCore.QEntity(self.entity)
+        self.arm_entity.addComponent(self.arm_mesh)
+        self.arm_entity.addComponent(self.material)
+        self.arm_entity.addComponent(self.arm_transform)
 
-        self.segment_transform = Qt3DCore.QTransform()
-        self.segment_transform.setTranslation(self.jointP)
 
-        self.controller = JointTransformController(self.segment_transform)
-        self.controller.setTarget(self.segment_transform)
+        self.controller = JointTransformController(self.transform)
+        self.controller.setTarget(self.transform)
         self.controller.setRotationPoint(self.jointP)
 
         self.entity.addComponent(self.material)
-        self.entity.addComponent(self.segment_transform)
 
 class BasePlate(Qt3DCore.QEntity):
     """Default Base for robotic arm. For connecting the first element
@@ -177,18 +188,19 @@ class EndEffector(GenericEntity):
         super().__init__(parent, color, scale, name, position, jointP)
         self.theta = theta
         self.length = length
+        self.endP = QVector3D() 
 
         self.joint = Joint(parent=self.entity, jointP=self.jointP)
 
         # Plate
         self.cuboidMesh = Qt3DExtras.QCuboidMesh()
-        self.cuboidMesh.setXExtent(40)  
+        self.cuboidMesh.setXExtent(self.length)  
         self.cuboidMesh.setYExtent(10)  
         self.cuboidMesh.setZExtent(10)  
 
         # Transform
         self.cuboidTransform = Qt3DCore.QTransform()
-        self.cuboidTransform.setTranslation(QVector3D(20, 0, 0))  # Position the cuboid next to the sphere
+        self.cuboidTransform.setTranslation(QVector3D(self.length / 2, 0, 0))  # Position the cuboid next to the sphere
         # self.cuboidTransform.setTranslation(QVector3D(5,0,0))
 
         # Entity
