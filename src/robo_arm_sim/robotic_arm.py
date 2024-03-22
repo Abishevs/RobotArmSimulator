@@ -54,7 +54,7 @@ class RoboticArm(QObject):
         
     def animate(self):
         for seg in self.segments:
-            animation = QPropertyAnimation(seg.transform)
+            animation = QPropertyAnimation(seg.controller)
             animation.setTargetObject(seg.controller)
             animation.setPropertyName(b"angle")
             animation.setStartValue(0)
