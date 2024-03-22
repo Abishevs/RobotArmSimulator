@@ -6,6 +6,7 @@ from PySide6.QtCore import (QObject, QPropertyAnimation)
 from PySide6.QtGui import (QVector3D)
 
 from robo_arm_sim.entities import ArmSegment, BasePlate
+from commons.logger import LoggerConfig as Log
 
 class RoboticArm(QObject):
     def __init__(self):
@@ -23,7 +24,7 @@ class RoboticArm(QObject):
         seg.theta = angle
         self.forward_kinematics()
         EF = self.segments[-1]
-        print(f"End effectors x,y: {EF.get_endp_str()}. Theta: {EF.get_theta_str()}")
+        Log.debug(f"End effectors x,y: {EF.get_endp_str()}. Theta: {EF.get_theta_str()}")
 
     def forward_kinematics(self):
         """Calculate new postions and updates it gets called on angle changes"""
