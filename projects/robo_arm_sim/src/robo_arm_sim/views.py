@@ -1,4 +1,5 @@
 import json
+
 from PySide6.QtWidgets import ( QHBoxLayout, QLabel, QMainWindow, QPushButton, QWidget, QVBoxLayout)
 from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DRender import Qt3DRender
@@ -11,13 +12,13 @@ from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QMainWindow, QWidget
 from PySide6.QtWebSockets import QWebSocket, QWebSocketProtocol
-from commons.json_schema import validate_message
 
 from robo_arm_sim.entities import ArmSegment, BasePlate, EndEffector
 from robo_arm_sim.robotic_arm import RoboticArm
 from robo_arm_sim.ui.ui_angle_controll_widget import Ui_SegmentControllWidget
 from robo_arm_sim.ui.ui_mainwindow import Ui_MainWindow
-from commons.logger import LoggerConfig as Log
+from commonlib.logger import LoggerConfig as Log
+from commonlib.json_schema import validate_message
 
 class WebSocketClient(QWidget):
     onRecievedCommand = Signal(str)
@@ -74,14 +75,14 @@ class WebSocketClient(QWidget):
                     }
                 }
 
-        res, isValid = validate_message(msg_data)
-        if isValid:
-            msg_str = json.dumps(msg_data)
-            Log.debug(msg_str)
-            self.websocket.sendTextMessage(msg_str)
-            self.connect_button.setText("Disconnect")
-        else:
-            Log.debug(res)
+        # res, isValid = validate_message(msg_data)
+        # if isValid:
+        #     msg_str = json.dumps(msg_data)
+        #     Log.debug(msg_str)
+        #     self.websocket.sendTextMessage(msg_str)
+        #     self.connect_button.setText("Disconnect")
+        # else:
+        #     Log.debug(res)
         
     @Slot()
     def on_disconnected(self):

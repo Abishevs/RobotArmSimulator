@@ -4,8 +4,8 @@ from random import randint
 from websockets.exceptions import ConnectionClosed
 from websockets.server import serve
 
-from commons.logger import LoggerConfig as Log
-from commons.json_schema import validate_message
+from commonlib.logger import LoggerConfig as Log
+from commonlib.json_schema import validate_message
 
 class WebSocketServer:
     def __init__(self, 
@@ -48,15 +48,5 @@ class WebSocketServer:
                 await client.send(data)
                 Log.info(f"Sent data to client: {data}")
 
-async def main():
-    interval = 5
-    server = WebSocketServer('localhost', 4203) 
-    task1 = asyncio.create_task(server.run())
-    task2 = asyncio.create_task(server.send_data_periodically(interval))
-    await asyncio.gather(task1, task2)
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
 
 # asyncio.run(main())

@@ -6,7 +6,7 @@ from PySide6.QtCore import (QObject, QPropertyAnimation)
 from PySide6.QtGui import (QVector3D)
 
 from robo_arm_sim.entities import ArmSegment, BasePlate
-from commons.logger import LoggerConfig as Log
+from commonlib.logger import LoggerConfig as Log
 
 class RoboticArm(QObject):
     def __init__(self):

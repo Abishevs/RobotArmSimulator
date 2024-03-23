@@ -1,8 +1,7 @@
 import asyncio
 import websockets
-import aioconsole
 
-from commons.json_schema import validate_message
+from commonlib.json_schema import validate_message
 
 async def listen(websocket):
     try:
@@ -11,17 +10,12 @@ async def listen(websocket):
     except websockets.ConnectionClosed:
         print("Connection closed by the server.")
 
-async def send(websocket):
-    while True:
-        command = await aioconsole.ainput(">> ")
-        await websocket.send(command)
 
 async def main():
     uri = "ws://localhost:4203"
     async with websockets.connect(uri) as websocket:
         await asyncio.gather(
             listen(websocket),
-            send(websocket),
         )
 
 if __name__ == "__main__":
