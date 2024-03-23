@@ -5,15 +5,21 @@ class LoggerConfig:
     ERROR_LOGGER = 'error_logger'
     ACTION_LOGGER = 'action_logger'
     DEBUG_LOGGER = 'debug_logger'
+    LOG_DIR = 'logs'
 
     @staticmethod
     def setup_logging():
+        if not os.path.exists(LoggerConfig.LOG_DIR):
+            os.makedirs(LoggerConfig.LOG_DIR)
+
         # Set up Error Logger
-        LoggerConfig._setup_file_logger(LoggerConfig.ERROR_LOGGER, 'errors.log', 
+        LoggerConfig._setup_file_logger(LoggerConfig.ERROR_LOGGER, 
+                                        os.path.join(LoggerConfig.LOG_DIR, 'errors.log'), 
                                         logging.INFO, '%(asctime)s - %(levelname)s - %(message)s')
 
         # Set up Action Logger
-        LoggerConfig._setup_file_logger(LoggerConfig.ACTION_LOGGER, 'actions.log', 
+        LoggerConfig._setup_file_logger(LoggerConfig.ACTION_LOGGER,
+                                        os.path.join(LoggerConfig.LOG_DIR, 'actions.log'), 
                                         logging.INFO, '%(asctime)s - %(message)s')
 
         # Set up Debug Logger

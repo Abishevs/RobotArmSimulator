@@ -2,3 +2,12 @@
 # RoboArmSimulator
 an 3D env which mimics an real world robotic arm.
 Connects via WS to an physical arm and sends move commands while updating the 3D view of it
+
+## Usage
+Theese scripts only work on Linux, as you should not use windows.
+```bash
+source scripts/setup.py
+install-app <application-name>
+start-app <apps-name>
+```
+Where <apps-name> is all subdirs of projects
