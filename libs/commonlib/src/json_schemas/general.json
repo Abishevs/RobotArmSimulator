@@ -1,0 +1,23 @@
+{
+	"type": "object",
+	"properties": {
+		"messageType": {
+			"type": "string",
+			"enum": ["command", "error", "positionUpdate"]
+		},
+		"identifier": {
+			"type": "string"
+		},
+		"source": {
+			"type": "string"
+		},
+		"target": {
+			"type": "string"
+		},
+		"payload": {
+			"type": "object"
+		}
+	},
+	"required": ["messageType", "payload"]
+}
+

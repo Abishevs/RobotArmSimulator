@@ -1,19 +1,98 @@
-from PySide6.QtWidgets import ( QMainWindow, QWidget, QVBoxLayout)
+import json
+
+from PySide6.QtWidgets import ( QHBoxLayout, QLabel, QMainWindow, QPushButton, QWidget, QVBoxLayout)
 from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DRender import Qt3DRender
 from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6 import QtGui
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QTimer, Signal, Slot
 from PySide6.QtGui import QColor, QVector3D
 from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QMainWindow, QWidget
+from PySide6.QtWebSockets import QWebSocket, QWebSocketProtocol
 
 from robo_arm_sim.entities import ArmSegment, BasePlate, EndEffector
 from robo_arm_sim.robotic_arm import RoboticArm
 from robo_arm_sim.ui.ui_angle_controll_widget import Ui_SegmentControllWidget
 from robo_arm_sim.ui.ui_mainwindow import Ui_MainWindow
+from commonlib.logger import LoggerConfig as Log
+from commonlib.json_schema import validate_message
+
+class WebSocketClient(QWidget):
+    onRecievedCommand = Signal(str)
+
+    def __init__(self, host: str = "ws://localhost:4203"):
+        super().__init__()
+        self.host = host
+        self.websocket = QWebSocket()
+        self.websocket.connected.connect(self.on_connected)
+        self.websocket.disconnected.connect(self.on_disconnected)
+        self.websocket.textMessageReceived.connect(self.on_text_message_received)
+        self.websocket.errorOccurred.connect(self.on_error)
+
+        self.host_text = QLabel(f"Server IP: '{self.host}'")
+
+        self.connect_button = QPushButton("Connect")
+        self.connect_button.clicked.connect(self.toggle_connection)
+
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.addWidget(self.host_text)
+        self.main_layout.addWidget(self.connect_button)
+        
+    @Slot(QWebSocketProtocol.CloseCode)
+    def on_error(self, error_code):
+        Log.err(f"Error code: {error_code}")
+
+    def toggle_connection(self):
+        if not self.websocket.isValid():
+            self.websocket.open(self.host)
+            self.connect_button.setText("Connecting...")
+        else:
+            self.websocket.close()
+            
+    def connect_to_server(self):
+        self.websocket.open(self.host)
+
+    def disconnect_from_server(self):
+        self.websocket.disconnect(self.websocket)
+        
+    @Slot()
+    def on_connected(self):
+        Log.info("Connected to server")
+
+        msg_data =  {
+                "messageType": "positionUpdate",
+                "identifier": "123",
+                "source": "arm",
+                "target": "gui",
+                "payload": {
+                    "positions": [
+                        {"jointId": 1, "currentAngle": 45},
+                        {"jointId": 2, "currentAngle": 90}
+                        ]
+                    }
+                }
+
+        # res, isValid = validate_message(msg_data)
+        # if isValid:
+        #     msg_str = json.dumps(msg_data)
+        #     Log.debug(msg_str)
+        #     self.websocket.sendTextMessage(msg_str)
+        #     self.connect_button.setText("Disconnect")
+        # else:
+        #     Log.debug(res)
+        
+    @Slot()
+    def on_disconnected(self):
+        Log.info("Disconnected from server")
+        self.connect_button.setText("Connect")
+        
+    @Slot(str)
+    def on_text_message_received(self, message):
+        self.onRecievedCommand.emit(message)
+        Log.info(f"Message from server: {message}")
 
 class SimWindow(Qt3DExtras.Qt3DWindow):
     def __init__(self):
@@ -46,7 +125,7 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
         lightEntity.addComponent(light)
 
         self.setRootEntity(self.rootEntity)
-        self.robot_arm.animate()
+        # self.robot_arm.animate()
 
 
     def setup_models(self):
@@ -127,9 +206,27 @@ class SegmentControllWidget(QWidget):
         self.ui.angle_slider.valueChanged.connect(self.emit_angle_change)
 
         # setup buttons
+        self.timer = QTimer()
         self.ui.right_inc_btn.clicked.connect(self.increment_angle)
+        self.ui.right_inc_btn.pressed.connect(self.start_increasing_angle)
+        self.ui.right_inc_btn.released.connect(self.stop_timer)
+        
 
         self.ui.left_inc_btn.clicked.connect(self.decrement_angle)
+        self.ui.left_inc_btn.pressed.connect(self.start_decreasing_angle)
+        self.ui.left_inc_btn.released.connect(self.stop_timer)
+
+    def start_increasing_angle(self):
+        self.timer.timeout.connect(self.increment_angle)
+        self.timer.start()
+
+    def start_decreasing_angle(self):
+        self.timer.timeout.disconnect()
+        self.timer.timeout.connect(self.decrement_angle)
+        self.timer.start()
+
+    def stop_timer(self):
+        self.timer.stop()
 
     def increment_angle(self):
         self.ui.angle_slider.setValue(self.ui.angle_slider.value() + self.angle_step)
@@ -184,14 +281,32 @@ class MainWindow(QMainWindow):
         self.sim_container = QWidget.createWindowContainer(self.sim_window, self)
         sim_layout = QVBoxLayout(self.ui.sim_container)
         sim_layout.addWidget(self.sim_container)
+        self.statusBar().showMessage("Hello??", 3000)
 
         # Control panel
         self.controlPanel = ControlPanel()
         right_sidebar_layout = QVBoxLayout(self.ui.right_sidebar)
         right_sidebar_layout.addWidget(self.controlPanel)
 
+
+        # WS Client
+        self.ws_client = WebSocketClient()
+        self.ws_client.onRecievedCommand.connect(self.handle_command)
+        botom_bar = QVBoxLayout(self.ui.bottom_menubar)
+        botom_bar.addWidget(self.ws_client)
+
+        # TopBar
+        top_bar = QHBoxLayout(self.ui.top_bar)
+        self.reciev_label = QLabel("Nothing yet")
+        top_bar.addWidget(self.reciev_label)
+        
         # self.sim_window.setup_scene()
 
         # Signals-slots
         self.controlPanel.angleChanged.connect(self.sim_window.robot_arm.update_angle)
         # self.sim_window.robot_arm.update_angle(0, 45)
+
+    @Slot(str)
+    def handle_command(self, msg):
+        self.reciev_label.setText(f"Got from server: {msg}")
+
