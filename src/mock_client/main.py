@@ -2,6 +2,8 @@ import asyncio
 import websockets
 import aioconsole
 
+from commons.json_schema import validate_message
+
 async def listen(websocket):
     try:
         async for message in websocket:
@@ -23,5 +25,19 @@ async def main():
         )
 
 if __name__ == "__main__":
+    position_update_message = {
+    "messageType": "positionUpdate",
+    "identifier": "123",
+    "source": "arm",
+    "target": "gui",
+    "payload": {
+        "positions": [
+            {"jointId": 1, "currentAngle": 45},
+            {"jointId": 2, "currentAngle": 90}
+        ]
+    }
+}
+
+    print(validate_message(position_update_message))
     asyncio.run(main())
 

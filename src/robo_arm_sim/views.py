@@ -1,3 +1,4 @@
+import json
 from PySide6.QtWidgets import ( QHBoxLayout, QLabel, QMainWindow, QPushButton, QWidget, QVBoxLayout)
 from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DRender import Qt3DRender
@@ -10,6 +11,7 @@ from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QMainWindow, QWidget
 from PySide6.QtWebSockets import QWebSocket, QWebSocketProtocol
+from commons.json_schema import validate_message
 
 from robo_arm_sim.entities import ArmSegment, BasePlate, EndEffector
 from robo_arm_sim.robotic_arm import RoboticArm
@@ -40,7 +42,6 @@ class WebSocketClient(QWidget):
         
     @Slot(QWebSocketProtocol.CloseCode)
     def on_error(self, error_code):
-        # print(f"Error code: {error_code}")
         Log.err(f"Error code: {error_code}")
 
     def toggle_connection(self):
@@ -59,8 +60,28 @@ class WebSocketClient(QWidget):
     @Slot()
     def on_connected(self):
         Log.info("Connected to server")
-        self.websocket.sendTextMessage("Hello, server!")
-        self.connect_button.setText("Disconnect")
+
+        msg_data =  {
+                "messageType": "positionUpdate",
+                "identifier": "123",
+                "source": "arm",
+                "target": "gui",
+                "payload": {
+                    "positions": [
+                        {"jointId": 1, "currentAngle": 45},
+                        {"jointId": 2, "currentAngle": 90}
+                        ]
+                    }
+                }
+
+        res, isValid = validate_message(msg_data)
+        if isValid:
+            msg_str = json.dumps(msg_data)
+            Log.debug(msg_str)
+            self.websocket.sendTextMessage(msg_str)
+            self.connect_button.setText("Disconnect")
+        else:
+            Log.debug(res)
         
     @Slot()
     def on_disconnected(self):

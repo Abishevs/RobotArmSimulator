@@ -1,0 +1,22 @@
+{
+	"type": "object",
+	"properties": {
+		"positions": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"properties": {
+					"jointId": {
+						"type": "integer"
+					},
+					"currentAngle": {
+						"type": "number"
+					}
+				},
+				"required": ["jointId", "currentAngle"]
+			}
+		}
+	},
+	"required": ["positions"]
+}
+

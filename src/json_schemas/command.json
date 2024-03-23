@@ -1,0 +1,14 @@
+{
+	"type": "object",
+	"properties": {
+		"jointId": {
+			"type": "integer",
+			"description": "Identifier for the joint to move"
+		},
+		"angle": {
+			"type": "number",
+			"description": "Angle in degrees to move the specified joint"
+		}
+	},
+	"required": ["jointId", "angle"]
+}
