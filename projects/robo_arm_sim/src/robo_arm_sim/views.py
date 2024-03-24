@@ -1,4 +1,5 @@
 import json
+from typing import List
 
 from PySide6.QtWidgets import ( QHBoxLayout, QLabel, QMainWindow, QPushButton, QWidget, QVBoxLayout)
 from PySide6.QtGui import (QColor, QVector3D)
@@ -12,6 +13,7 @@ from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QMainWindow, QWidget
 from PySide6.QtWebSockets import QWebSocket, QWebSocketProtocol
+from robo_arm_sim.constants import THETA_UNICODE
 
 from robo_arm_sim.entities import ArmSegment, BasePlate, EndEffector
 from robo_arm_sim.robotic_arm import RoboticArm
@@ -23,7 +25,7 @@ from commonlib.json_schema import validate_message
 class WebSocketClient(QWidget):
     onRecievedCommand = Signal(str)
 
-    def __init__(self, host: str = "ws://localhost:4203"):
+    def __init__(self, host: str = "ws://192.168.1.58:4203"):
         super().__init__()
         self.host = host
         self.websocket = QWebSocket()
@@ -75,14 +77,14 @@ class WebSocketClient(QWidget):
                     }
                 }
 
-        # res, isValid = validate_message(msg_data)
-        # if isValid:
-        #     msg_str = json.dumps(msg_data)
-        #     Log.debug(msg_str)
-        #     self.websocket.sendTextMessage(msg_str)
-        #     self.connect_button.setText("Disconnect")
-        # else:
-        #     Log.debug(res)
+        res, isValid = validate_message(msg_data)
+        if isValid:
+            msg_str = json.dumps(msg_data)
+            Log.debug(msg_str)
+            self.websocket.sendTextMessage(msg_str)
+            self.connect_button.setText("Disconnect")
+        else:
+            Log.debug(res)
         
     @Slot()
     def on_disconnected(self):
@@ -92,6 +94,7 @@ class WebSocketClient(QWidget):
     @Slot(str)
     def on_text_message_received(self, message):
         self.onRecievedCommand.emit(message)
+        print(f"Message from server: {message}")
         Log.info(f"Message from server: {message}")
 
 class SimWindow(Qt3DExtras.Qt3DWindow):
@@ -99,8 +102,9 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
         super().__init__()
         self.rootEntity = Qt3DCore.QEntity()
         self.defaultFrameGraph().setClearColor(QtGui.QColor("black"))
+        self.robot_arm = RoboticArm()
         self.setup_models()
-        self.setup_scene()
+        # self.setup_scene()
 
     def setup_scene(self):
         # Camera setup
@@ -109,7 +113,7 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
         self.camera().setViewCenter(QtGui.QVector3D(0, 0, 0))
 
         # Setup models
-        self.setup_models() 
+        # self.setup_models() 
         self.setupGroundPlane()
 
         # Camera controller
@@ -129,34 +133,34 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
 
 
     def setup_models(self):
-        self.robot_arm = RoboticArm()
         base = BasePlate(self.rootEntity)
         self.robot_arm.add_base(base)
         self.robot_arm.add_segment(ArmSegment(self.rootEntity,
-                                              name="Segment1",
-                                              color="yellow",
-                                              length=50,
-                                              jointP=QVector3D(0, 0, 0),
+                                              name = "Segment1",
+                                              color = "yellow",
+                                              length = 50,
+                                              theta = (90 + 20),
+                                              jointP = QVector3D(0, 0, 0),
                                               ))
         self.robot_arm.add_segment(ArmSegment(self.rootEntity,
-                                              name="Segment2",
-                                              color="cyan",
-                                              length=100,
-                                              # theta=90,
-                                              jointP=QVector3D(50, 0, 0),
+                                              name = "Segment2",
+                                              color = "cyan",
+                                              length = 100,
+                                              theta = (180 - 45),
+                                              jointP = QVector3D(50, 0, 0),
                                               ))
         # self.robot_arm.add_segment(ArmSegment(self.rootEntity,
         #                                       name="Segment3",
         #                                       color="red",
         #                                       length=100,
-        #                                       # theta=180,
+                                                # theta=180,
         #                                       jointP=QVector3D(150, 0, 0),
         #                                       ))
         self.robot_arm.add_segment(EndEffector(self.rootEntity,
-                                              name="End_effector",
-                                              color="green",
-                                              # theta=180,
-                                              jointP=QVector3D(150, 0, 0),
+                                              name = "End_effector",
+                                              color = "green",
+                                              theta = (90 + 45),
+                                              jointP = QVector3D(150, 0, 0),
                                               ))
 
     def setupGroundPlane(self):
@@ -175,12 +179,13 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
 
 class SegmentControllWidget(QWidget):
     angleChanged = Signal(int, float)
+    lengthChanged = Signal(int, float) 
 
     def __init__(self,
-                 segment_id:int, 
-                 name:str="Segment1",
-                 min_angle:int = -90,
-                 max_angle:int = 90,
+                 segment_id: int, 
+                 name: str = "Segment1",
+                 min_angle:int = 0,
+                 max_angle:int = 180,
                  angle_step:int = 1,
                  parent = None) -> None:
         super(SegmentControllWidget, self).__init__(parent)
@@ -197,24 +202,34 @@ class SegmentControllWidget(QWidget):
         # Setup slider
         # self.ui.angle_label = QLabel(f"Theta_{self.segment_id + 1}")
         self.str_id = f"{self.segment_id + 1}"
-        self.ui.angle_label.setText(f"Theta_{self.segment_id + 1}")
-        self.ui.length_label.setText(f"Length_{self.segment_id + 1}")
+        self.ui.angle_label.setText(f"{THETA_UNICODE}<sub>{self.str_id}</sub>")
+        self.ui.length_label.setText(f"L<sub>{self.str_id}</sub>")
         self.ui.title.setText(self.name)
 
         self.ui.angle_slider.setMinimum(self.min_angle)
         self.ui.angle_slider.setMaximum(self.max_angle)
         self.ui.angle_slider.valueChanged.connect(self.emit_angle_change)
 
-        # setup buttons
+        # Rigth btn
         self.timer = QTimer()
         self.ui.right_inc_btn.clicked.connect(self.increment_angle)
         self.ui.right_inc_btn.pressed.connect(self.start_increasing_angle)
         self.ui.right_inc_btn.released.connect(self.stop_timer)
-        
 
+        # Left btn
         self.ui.left_inc_btn.clicked.connect(self.decrement_angle)
         self.ui.left_inc_btn.pressed.connect(self.start_decreasing_angle)
         self.ui.left_inc_btn.released.connect(self.stop_timer)
+
+        # angle spinbox
+        self.ui.angle_spinbox.valueChanged.connect(self.emit_angle_change)
+        self.set_max_angle(self.max_angle)
+        self.set_min_angle(self.min_angle)
+
+        # Length spingbox
+        self.ui.length_spinbox.valueChanged.connect(self.emit_length_change)
+        self.ui.length_spinbox.setMaximum(200)
+        self.ui.length_spinbox.setMinimum(10)
 
     def start_increasing_angle(self):
         self.timer.timeout.connect(self.increment_angle)
@@ -234,40 +249,98 @@ class SegmentControllWidget(QWidget):
     def decrement_angle(self):
         self.ui.angle_slider.setValue(self.ui.angle_slider.value() - self.angle_step)
 
+    def on_angle_update(self, angle):
+        self.ui.angle_slider.setValue(angle)
+
+    def set_angle(self, angle: float):
+        self.ui.angle_slider.setValue(int(angle))
+        self.ui.angle_spinbox.setValue(angle)
+
     def emit_angle_change(self, angle):
+        self.set_angle(angle)
         self.angleChanged.emit(self.segment_id, angle)
+
+    def set_length(self, length: float):
+        self.ui.length_spinbox.setValue(length)
+
+    def emit_length_change(self, length):
+        Log.debug(f"New length: {length}")
+        self.lengthChanged.emit(self.segment_id, length)
 
     def set_max_angle(self, max_angle:int):
         self.max_angle = max_angle
+        self.ui.angle_spinbox.setMaximum(self.max_angle)
         self.ui.angle_slider.setMaximum(self.max_angle)
 
     def set_min_angle(self, min_angle:int):
         self.min_angle = min_angle
-        self.ui.angle_slider.setMaximum(self.min_angle)
+        self.ui.angle_spinbox.setMinimum(self.min_angle)
+        self.ui.angle_slider.setMinimum(self.min_angle)
 
 class ControlPanel(QWidget):
     angleChanged = Signal(int, float)
+    lengthChanged = Signal(int, float)
+
     def __init__(self, parent=None):
         super(ControlPanel, self).__init__(parent)
+        self.segment_controllers: List[SegmentControllWidget] = [] 
+        self.position_frames: List = []
+
+        # Connect Signal to Slots
+
         self.main_layout = QVBoxLayout()
 
         # self.angleSlider1.setValue(45) # TODO: impl get curr pos
-        self.add_segment_controller(0, 
-                                    name="Segment 1",
+        self.add_segment_controller(0, name="Segment 1",
                                     min_angle=0,
-                                    max_angle=90)
+                                    max_angle=180)
         self.add_segment_controller(1, name="Segment 2")
         self.add_segment_controller(2, name="End Effector")
 
         self.setLayout(self.main_layout)
 
+    def set_top_bar(self, top_bar):
+        self.top_bar = top_bar
+        for i, seg_controller in enumerate(self.segment_controllers):
+            seg = self.robot_arm.get_seg(seg_controller.segment_id)
+            recieve_label = QLabel(seg.pretty_str(i))
+            self.position_frames.append(recieve_label)
+            self.top_bar.addWidget(recieve_label)
+
+    def set_robot_arm_controller(self, robot_arm:RoboticArm):
+        self.robot_arm = robot_arm
+        for i, segment_controller in enumerate(self.segment_controllers):
+            length = self.robot_arm.get_length(i)
+            angle = self.robot_arm.get_angle(i)
+            segment_controller.set_length(length)
+            segment_controller.set_angle(angle)
+            print(f"Initial angle: {angle} Degrees")
+
     def add_segment_controller(self, segment_id, **kwargs):
         segment_controll = SegmentControllWidget(segment_id, parent=self, **kwargs)
         segment_controll.angleChanged.connect(self.emit_angle_change)
+        segment_controll.lengthChanged.connect(self.emit_length_change)
+        # segment_controll.set_length(self.robot_arm.segments[segment_id].length)
+        self.segment_controllers.append(segment_controll)
         self.main_layout.addWidget(segment_controll)
+
+    def on_length_updated(self, index, value):
+        segment_controller = self.segment_controllers[index]
+        segment_controller.set_length(value)
+
+    def update_seg_label(self):
+        for index, _ in enumerate(self.segment_controllers):
+            seg = self.robot_arm.get_seg(index)
+            position_label = self.position_frames[index]
+            position_label.setText(seg.pretty_str(index))
 
     def emit_angle_change(self, index, value):
         self.angleChanged.emit(index, value)
+        self.update_seg_label()
+
+    def emit_length_change(self, index, value):
+        self.lengthChanged.emit(index, value)
+        self.update_seg_label()
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -291,22 +364,29 @@ class MainWindow(QMainWindow):
 
         # WS Client
         self.ws_client = WebSocketClient()
-        self.ws_client.onRecievedCommand.connect(self.handle_command)
+        # self.ws_client.onRecievedCommand.connect(self.handle_command)
         botom_bar = QVBoxLayout(self.ui.bottom_menubar)
         botom_bar.addWidget(self.ws_client)
 
-        # TopBar
-        top_bar = QHBoxLayout(self.ui.top_bar)
-        self.reciev_label = QLabel("Nothing yet")
-        top_bar.addWidget(self.reciev_label)
         
-        # self.sim_window.setup_scene()
+        # setup lightning, camera etc
+        self.sim_window.setup_scene()
 
         # Signals-slots
         self.controlPanel.angleChanged.connect(self.sim_window.robot_arm.update_angle)
+        self.controlPanel.lengthChanged.connect(self.sim_window.robot_arm.update_length)
         # self.sim_window.robot_arm.update_angle(0, 45)
 
-    @Slot(str)
-    def handle_command(self, msg):
-        self.reciev_label.setText(f"Got from server: {msg}")
+        self.controlPanel.set_robot_arm_controller(self.sim_window.robot_arm)
+
+        # TopBar
+        top_bar = QHBoxLayout(self.ui.top_bar)
+        self.controlPanel.set_top_bar(top_bar)
+
+    def complete_setup(self):
+        pass
+
+    # @Slot(str)
+    # def handle_command(self, msg):
+    #     self.recieve_label.setText(f"Got from server: {msg}")
 

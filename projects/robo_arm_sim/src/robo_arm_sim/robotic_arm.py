@@ -2,13 +2,16 @@ from typing import List
 import numpy as np
 import math
 
-from PySide6.QtCore import (QObject, QPropertyAnimation)
+from PySide6.QtCore import (QObject, QPropertyAnimation, Signal)
 from PySide6.QtGui import (QVector3D)
 
 from robo_arm_sim.entities import ArmSegment, BasePlate
 from commonlib.logger import LoggerConfig as Log
 
 class RoboticArm(QObject):
+    # angleUpdated = Signal(int, float)
+    # lengthUpdated = Signal(int, float)
+
     def __init__(self):
         self.base: BasePlate
         self.segments: List[ArmSegment] = []
@@ -19,10 +22,32 @@ class RoboticArm(QObject):
     def add_segment(self, segment):
         self.segments.append(segment)
 
+    def get_seg(self, index: int):
+        seg = self.segments[index]
+        return seg
+
+    def get_angle(self, index: int) -> float:
+        return self.get_seg(index).theta
+
+    def get_length(self, index: int) -> float:
+        return self.get_seg(index).length
+
+    def update_length(self, index:int, length:float):
+        seg = self.segments[index]
+        seg.set_length(length)
+        print(f"seg {seg.name} length: {seg.length}")
+        self.forward_kinematics()
+        # self.lengthUpdated.emit(index, length)
+
     def update_angle(self, index:int, angle:float):
         seg = self.segments[index]
-        seg.theta = angle
+        # Theta range 0-180
+        if index == 0:
+            seg.theta = angle / 2 # compensate in 3D scene
+        else:
+            seg.theta = angle - 90 # Same
         self.forward_kinematics()
+        # self.angleUpdated.emit(index, angle)
         EF = self.segments[-1]
         Log.debug(f"End effectors x,y: {EF.get_endp_str()}. Theta: {EF.get_theta_str()}")
 
@@ -34,6 +59,7 @@ class RoboticArm(QObject):
 
         for i, seg in enumerate(self.segments):
             cummulativ_angle += seg.theta
+            print(f"seg: {seg.name}: Theta: {seg.theta}")
 
             # Calc curr seg endP
             new_x = prev_x + seg.length * math.cos(np.deg2rad(cummulativ_angle))
@@ -45,6 +71,7 @@ class RoboticArm(QObject):
 
             # apply transformation
             seg.controller.setRotationPoint(seg.jointP)
+            print(f"seg: {seg.name}: jointP: {seg.jointP}")
             seg.controller.setAngle(cummulativ_angle)
 
             # set currents seg endP as next seg JointP

@@ -1,6 +1,7 @@
 from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
+from robo_arm_sim.constants import THETA_UNICODE
 
 from robo_arm_sim.controllers import JointTransformController
 
@@ -29,9 +30,17 @@ class GenericEntity:
         # Setup transformations
         self.transform = Qt3DCore.QTransform()
         self.transform.setTranslation(self.position)
-        
+                
         self.entity.addComponent(self.material)
         self.entity.addComponent(self.transform)
+
+    def __str__(self) -> str:
+        return f"{self.name.title()}(X: {self.get_endp_str()[0]}, Y: {self.get_endp_str()[1]}, {THETA_UNICODE}: {self.theta})"
+
+    def pretty_str(self, index) -> str:
+        endP = self.get_endp_str()
+        theta = self.get_theta_str()
+        return f"{self.name}: (X: {endP[0]}, Y: {endP[1]}, {THETA_UNICODE}<sub>{index+1}</sub>: {theta})"
 
     def add_mesh(self, mesh):
         self.mesh = mesh
@@ -55,6 +64,65 @@ class GenericEntity:
     
     def get_theta_str(self):
         return f"{self.theta:.2f}"
+
+class BasePlate(Qt3DCore.QEntity):
+    """Default Base for robotic arm. For connecting the first element
+    """
+    def __init__(self,
+                 parent,
+                 scale:float = 0.1,
+                 rotation:float = -90,
+                 color:str="blue",
+                 sizeX:float=100,
+                 sizeZ:float=100,
+                 pivotP:QVector3D=QVector3D(0,0,0)
+                 ) -> None:
+        super().__init__(parent)
+        self.color = color
+        self.sizeX = sizeX
+        self.sizeZ = sizeZ
+        self.pivotP = pivotP
+        self.scale = scale
+        self.rotation = rotation
+        self.material = Qt3DExtras.QPhongMaterial()
+        self.material.setDiffuse(QColor(self.color))
+
+        # Base 
+        self.base_plateMesh = Qt3DExtras.QCuboidMesh()
+        self.base_plateMesh.setXExtent(self.sizeX)  # Length of the base
+        self.base_plateMesh.setYExtent(15)  # Base thinkes is halv to the pivotP
+        self.base_plateMesh.setZExtent(self.sizeZ)  # Depth of of the base 
+
+        self.base_plate_transform = Qt3DCore.QTransform()
+        self.base_plate_transform.setScale(self.scale)
+        self.base_plate_transform.setTranslation(QVector3D(0, -1.5, 0))  # Set at origin
+
+        self.base_plate_entity = Qt3DCore.QEntity(self)
+        self.base_plate_entity.addComponent(self.base_plateMesh)
+        self.base_plate_entity.addComponent(self.material)
+        self.base_plate_entity.addComponent(self.base_plate_transform)
+
+        self.extender_mesh = Qt3DExtras.QCuboidMesh()
+        self.extender_mesh.setXExtent(10)  # Length of the base
+        self.extender_mesh.setYExtent(15)  # extender thinkes is halv to the pivotP
+        self.extender_mesh.setZExtent(10)  # Depth of of the extender
+        
+        self.extender_entity = Qt3DCore.QEntity(self) 
+        self.extender_transform = Qt3DCore.QTransform()
+        self.extender_transform.setScale(self.scale)
+        self.extender_transform.setTranslation(QVector3D(0, self.pivotP.y(), 0))
+        # self.extender_transform.setRotationZ(self.rotation)
+        
+        self.extender_entity.addComponent(self.material)
+        self.extender_entity.addComponent(self.extender_mesh)
+        self.extender_entity.addComponent(self.extender_transform)
+
+    def get_pivotP(self) -> QVector3D:
+        return self.pivotP
+
+    def set_pivotP(self, pivotP:QVector3D):
+        self.pivotP = pivotP
+
 
 class Joint(GenericEntity):
     def __init__(self, 
@@ -117,63 +185,11 @@ class ArmSegment(GenericEntity):
 
         self.entity.addComponent(self.material)
 
-class BasePlate(Qt3DCore.QEntity):
-    """Default Base for robotic arm. For connecting the first element
-    """
-    def __init__(self,
-                 parent,
-                 scale:float = 0.1,
-                 rotation:float = -90,
-                 color:str="blue",
-                 sizeX:float=100,
-                 sizeZ:float=100,
-                 pivotP:QVector3D=QVector3D(0,0,0)
-                 ) -> None:
-        super().__init__(parent)
-        self.color = color
-        self.sizeX = sizeX
-        self.sizeZ = sizeZ
-        self.pivotP = pivotP
-        self.scale = scale
-        self.rotation = rotation
-        self.material = Qt3DExtras.QPhongMaterial()
-        self.material.setDiffuse(QColor(self.color))
+    def set_length(self, length: float):
+        self.length = length
+        self.arm_mesh.setXExtent(self.length)
+        self.arm_transform.setTranslation(QVector3D(self.length / 2, 0, 0))
 
-        # Base 
-        self.base_plateMesh = Qt3DExtras.QCuboidMesh()
-        self.base_plateMesh.setXExtent(self.sizeX)  # Length of the base
-        self.base_plateMesh.setYExtent(15)  # Base thinkes is halv to the pivotP
-        self.base_plateMesh.setZExtent(self.sizeZ)  # Depth of of the base 
-
-        self.base_plate_transform = Qt3DCore.QTransform()
-        self.base_plate_transform.setScale(self.scale)
-        self.base_plate_transform.setTranslation(QVector3D(0, -1.5, 0))  # Set at origin
-
-        self.base_plate_entity = Qt3DCore.QEntity(self)
-        self.base_plate_entity.addComponent(self.base_plateMesh)
-        self.base_plate_entity.addComponent(self.material)
-        self.base_plate_entity.addComponent(self.base_plate_transform)
-
-        self.extender_mesh = Qt3DExtras.QCuboidMesh()
-        self.extender_mesh.setXExtent(10)  # Length of the base
-        self.extender_mesh.setYExtent(15)  # extender thinkes is halv to the pivotP
-        self.extender_mesh.setZExtent(10)  # Depth of of the extender
-        
-        self.extender_entity = Qt3DCore.QEntity(self) 
-        self.extender_transform = Qt3DCore.QTransform()
-        self.extender_transform.setTranslation(QVector3D(0, self.pivotP.y(), 0))
-        self.extender_transform.setScale(self.scale)
-        # self.extender_transform.setRotationZ(self.rotation)
-        
-        self.extender_entity.addComponent(self.material)
-        self.extender_entity.addComponent(self.extender_mesh)
-        self.extender_entity.addComponent(self.extender_transform)
-
-    def get_pivotP(self) -> QVector3D:
-        return self.pivotP
-
-    def set_pivotP(self, pivotP:QVector3D):
-        self.pivotP = pivotP
 
 class EndEffector(GenericEntity):
     def __init__(self, 

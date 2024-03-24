@@ -6,7 +6,7 @@ Connects via WS to an physical arm and sends move commands while updating the 3D
 ## Usage
 Theese scripts only work on Linux, as you should not use windows.
 ```bash
-source scripts/setup.py
+source scripts/setup.sh
 install-app <application-name>
 start-app <apps-name>
 ```

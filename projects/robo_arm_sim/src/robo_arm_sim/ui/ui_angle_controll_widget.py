@@ -17,20 +17,20 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QDoubleSpinBox, QFrame, QHBoxLayout,
     QLabel, QPushButton, QSizePolicy, QSlider,
-    QSpacerItem, QVBoxLayout, QWidget)
+    QVBoxLayout, QWidget)
 
 class Ui_SegmentControllWidget(object):
     def setupUi(self, SegmentControllWidget):
         if not SegmentControllWidget.objectName():
             SegmentControllWidget.setObjectName(u"SegmentControllWidget")
-        SegmentControllWidget.resize(294, 195)
+        SegmentControllWidget.resize(294, 210)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(SegmentControllWidget.sizePolicy().hasHeightForWidth())
         SegmentControllWidget.setSizePolicy(sizePolicy)
-        SegmentControllWidget.setMinimumSize(QSize(280, 0))
-        SegmentControllWidget.setMaximumSize(QSize(300, 200))
+        SegmentControllWidget.setMinimumSize(QSize(280, 210))
+        SegmentControllWidget.setMaximumSize(QSize(300, 250))
         SegmentControllWidget.setLayoutDirection(Qt.LeftToRight)
         self.verticalLayout = QVBoxLayout(SegmentControllWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -52,6 +52,11 @@ class Ui_SegmentControllWidget(object):
         self.angle_label.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
 
         self.verticalLayout.addWidget(self.angle_label)
+
+        self.angle_spinbox = QDoubleSpinBox(SegmentControllWidget)
+        self.angle_spinbox.setObjectName(u"angle_spinbox")
+
+        self.verticalLayout.addWidget(self.angle_spinbox)
 
         self.frame = QFrame(SegmentControllWidget)
         self.frame.setObjectName(u"frame")
@@ -91,10 +96,6 @@ class Ui_SegmentControllWidget(object):
 
 
         self.verticalLayout.addWidget(self.frame)
-
-        self.verticalSpacer = QSpacerItem(5, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
-
-        self.verticalLayout.addItem(self.verticalSpacer)
 
         self.length_label = QLabel(SegmentControllWidget)
         self.length_label.setObjectName(u"length_label")
