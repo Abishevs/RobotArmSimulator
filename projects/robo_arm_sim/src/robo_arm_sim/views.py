@@ -121,12 +121,12 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
         self.camController.setCamera(self.camera())
 
         # light source
-        lightEntity = Qt3DCore.QEntity(self.rootEntity)
-        light = Qt3DRender.QDirectionalLight(lightEntity)
-        light.setColor("white")
-        light.setIntensity(1.5)  # Adjust intensity as needed
-        light.setWorldDirection(QVector3D(1, -1, 1))  # Adjust direction as needed
-        lightEntity.addComponent(light)
+        self.lightEntity = Qt3DCore.QEntity(self.rootEntity)
+        self.light = Qt3DRender.QDirectionalLight(self.lightEntity)
+        self.light.setColor("white")
+        self.light.setIntensity(1.5)  # Adjust intensity as needed
+        self.light.setWorldDirection(QVector3D(1, -1, 1))  # Adjust direction as needed
+        self.lightEntity.addComponent(self.light)
 
         self.setRootEntity(self.rootEntity)
         # self.robot_arm.animate()
