@@ -37,7 +37,7 @@ class WebSocketServer:
                     # await websocket.send(f"Moved {res} degrees")
                 msg_data = json.loads(msg)
                 await self.process_message(websocket, msg_data)
-                print(f'recieved: {msg_data}')
+                print(f'recieved: {msg}')
                 # await websocket.send(f'echo {res}')
 
         except ConnectionClosed:
@@ -52,11 +52,15 @@ class WebSocketServer:
         msg_type = msg_data.get('messageType')
         print(f"rec msg_type: {msg_type}")
         if msg_type == "positionUpdate":
+            data = "BREE just a viewer"
+            data = json.dumps(data)
             if self.is_controlling_client(websocket):
                 print("Is the controller")
-                await websocket.send("YOOO controller")
+                data = "YOOO controller"
+                data = json.dumps(data)
+                await websocket.send(data)
             else:
-                await websocket.send("BREE just a viewer")
+                await websocket.send(data)
 
     async def run(self):
         async with serve(self.handler, self.host, self.port):
@@ -71,6 +75,11 @@ class WebSocketServer:
             # Prepare the data to be sent
             data = f"Periodic data: {randint(-90, 90)}" 
             # Send data to all connected clients
+            controller = self.controller_client
+            if controller is not None:
+                data = {"idk": data}
+                data = json.dumps(data)
+                await controller.send(data)
             for client in self.connected_clients:
                 await client.send(data)
                 Log.info(f"Sent data to client: {data}")

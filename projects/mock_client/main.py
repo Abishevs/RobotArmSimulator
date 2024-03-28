@@ -12,7 +12,7 @@ async def listen(websocket):
 
 
 async def main():
-    uri = "ws://localhost:4203"
+    uri = "ws://piserver.local:4203"
     async with websockets.connect(uri) as websocket:
         await asyncio.gather(
             listen(websocket),
