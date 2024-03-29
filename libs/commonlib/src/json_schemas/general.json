@@ -6,7 +6,8 @@
 			"enum": ["command", "error", "positionUpdate"]
 		},
 		"identifier": {
-			"type": "string"
+			"type": "string",
+			"enum": ["gui", "managed", "controller", "viewer"]
 		},
 		"source": {
 			"type": "string"
@@ -18,6 +19,6 @@
 			"type": "object"
 		}
 	},
-	"required": ["messageType", "payload"]
+	"required": ["messageType"]
 }
 

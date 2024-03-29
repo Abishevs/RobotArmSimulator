@@ -1,13 +1,25 @@
+import logging
 import asyncio
+import os
+
+from dotenv import load_dotenv
 
 from ws_server.ws_server import WebSocketServer
+from commonlib.logger import setup_logging
+
+
 
 async def main():
-    interval = 5
-    server = WebSocketServer('0.0.0.0', 8000) 
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    load_dotenv()
+    setup_logging(base_dir)
+
+    ip = "0.0.0.0"
+    port = 8000
+    server = WebSocketServer(ip, port) 
     task1 = asyncio.create_task(server.run())
-    task2 = asyncio.create_task(server.send_data_periodically(interval))
-    await asyncio.gather(task1, task2)
+    logging.info("Application started")
+    await asyncio.gather(task1)
 
 
 if __name__ == "__main__":
