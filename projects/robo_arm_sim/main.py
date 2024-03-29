@@ -1,14 +1,18 @@
 import os
 import sys
+from dotenv import load_dotenv
 
 from PySide6.QtWidgets import QApplication
 
 from robo_arm_sim.views import MainWindow
-from commonlib.logger import LoggerConfig as Log
+from commonlib.logger import setup_logging
 
 def main():
-    os.environ['DEBUG_MODE'] = '1'
-    Log.setup_logging()
+    # setup logging
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    load_dotenv()
+    setup_logging(base_dir)
+
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()

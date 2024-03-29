@@ -9,3 +9,6 @@ def pairwise(iterable):
     a, b = tee(iterable)
     next(b, None)
     return zip(a, islice(b, None))
+
+def get_angle(index, angle):
+    return angle * 2 if index == 0 else angle + 90

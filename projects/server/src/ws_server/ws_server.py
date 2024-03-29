@@ -218,7 +218,7 @@ class WebSocketServer:
 
         elif client.identifier == Identifier.MANAGED:
             # Updates from Managed client
-            if MessageType.POSITIONUPDATE.value in msg_data:
+            if msg_data["messageType"] == MessageType.POSITIONUPDATE.value:
                 self.state_manager.state = msg_data.get("payload")
                 data = {"messageType": MessageType.POSITIONUPDATE.value,
                         "payload": self.state_manager.state

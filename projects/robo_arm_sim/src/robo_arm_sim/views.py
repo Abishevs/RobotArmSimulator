@@ -1,5 +1,6 @@
+import logging
 import json
-from typing import List
+from typing import Dict, List, Optional
 
 from PySide6.QtWidgets import ( QHBoxLayout, QLabel, QMainWindow, QPushButton, QWidget, QVBoxLayout)
 from PySide6.QtGui import (QColor, QVector3D)
@@ -13,19 +14,22 @@ from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
 from PySide6.QtWidgets import QMainWindow, QWidget
 from PySide6.QtWebSockets import QWebSocket, QWebSocketProtocol
+from commonlib.enums import Identifier, MessageType
 from robo_arm_sim.constants import THETA_UNICODE
 
 from robo_arm_sim.entities import ArmSegment, BasePlate, EndEffector
 from robo_arm_sim.robotic_arm import RoboticArm
 from robo_arm_sim.ui.ui_angle_controll_widget import Ui_SegmentControllWidget
 from robo_arm_sim.ui.ui_mainwindow import Ui_MainWindow
-from commonlib.logger import LoggerConfig as Log
 from commonlib.json_schema import validate_message
+
+# Init logger
+logger = logging.getLogger(__name__)
 
 class WebSocketClient(QWidget):
     onRecievedCommand = Signal(str)
 
-    def __init__(self, host: str = "ws://192.168.1.58:4203"):
+    def __init__(self, robot_arm, host: str = "ws://localhost:8000", ):
         super().__init__()
         self.host = host
         self.websocket = QWebSocket()
@@ -33,6 +37,9 @@ class WebSocketClient(QWidget):
         self.websocket.disconnected.connect(self.on_disconnected)
         self.websocket.textMessageReceived.connect(self.on_text_message_received)
         self.websocket.errorOccurred.connect(self.on_error)
+
+        self.robotic_arm: RoboticArm = robot_arm 
+        self.identifier: Identifier = Identifier.GUI
 
         self.host_text = QLabel(f"Server IP: '{self.host}'")
 
@@ -42,10 +49,31 @@ class WebSocketClient(QWidget):
         self.main_layout = QHBoxLayout(self)
         self.main_layout.addWidget(self.host_text)
         self.main_layout.addWidget(self.connect_button)
-        
+
+    @Slot(int, int)
+    def send_position_update(self, index, angle):
+        positions = self.robotic_arm.get_current_positions()
+        data = {
+                "messageType": MessageType.POSITIONUPDATE.value,
+                "identifier": self.identifier.value,
+                "payload": positions
+                }
+
+        try:
+            validate_message(data)
+        except Exception as e:
+            logger.error(e)
+
+        else:
+            self.send_data(data)
+
+    def send_data(self, data: Dict):
+        if self.websocket.isValid():
+            self.websocket.sendTextMessage(json.dumps(data))
+
     @Slot(QWebSocketProtocol.CloseCode)
     def on_error(self, error_code):
-        Log.err(f"Error code: {error_code}")
+        logger.error(f"Error code: {error_code}")
 
     def toggle_connection(self):
         if not self.websocket.isValid():
@@ -56,55 +84,81 @@ class WebSocketClient(QWidget):
             
     def connect_to_server(self):
         self.websocket.open(self.host)
+        data = {
+                "identifier": self.identifier.value
+                }
+        self.send_data(data)
 
     def disconnect_from_server(self):
         self.websocket.disconnect(self.websocket)
         
     @Slot()
     def on_connected(self):
-        Log.info("Connected to server")
-
-        msg_data =  {
+        logger.info("Connected to server")
+        data =  {
                 "messageType": "positionUpdate",
-                "identifier": "123",
-                "source": "arm",
-                "target": "gui",
-                "payload": {
-                    "positions": [
-                        {"jointId": 1, "currentAngle": 45},
-                        {"jointId": 2, "currentAngle": 90}
-                        ]
-                    }
+                "identifier": self.identifier.value,
                 }
 
-        res, isValid = validate_message(msg_data)
-        if isValid:
-            msg_str = json.dumps(msg_data)
-            Log.debug(msg_str)
-            self.websocket.sendTextMessage(msg_str)
-            self.connect_button.setText("Disconnect")
+        try:
+            validate_message(data)
+        except Exception as e:
+            logger.error(e)
         else:
-            Log.debug(res)
+            self.send_data(data)
+            self.connect_button.setText("Disconnect")
         
     @Slot()
     def on_disconnected(self):
-        Log.info("Disconnected from server")
+        logger.info("Disconnected from server")
         self.connect_button.setText("Connect")
+        self.identifier = Identifier.GUI
         
     @Slot(str)
     def on_text_message_received(self, message):
+        logger.info(f"Message from server: {message}")
         self.onRecievedCommand.emit(message)
-        print(f"Message from server: {message}")
-        Log.info(f"Message from server: {message}")
+        data = json.loads(message)
+        try:
+            validate_message(data)
+        except Exception as e:
+            logger.error(e)
+        else:
+            # Validated thus safe to assign
+            # identifier = data.get("identifier")
+            positions = data.get("payload", {}).get("positions", [])
+            logger.debug(f"Postions to update: {positions}")
+            try:
+                # if identifier  and identifier != self.identifier.value:
+                #     self.identifier = Identifier(data["identifier"])
+                if positions:
+                    for pos in positions:
+                        index = pos.get("jointId", 0) - 1 
+                        logger.debug(index)
+                        new_angle = pos.get("currentAngle", 0)
+                        logger.debug(index)
+                        if 0 <= index < len(self.robotic_arm.segments):
+                            self.robotic_arm.update_angle(index, float(new_angle))
+                            logger.debug(f"new_angle: {self.robotic_arm.get_seg(index).theta}")
+                        else:
+                            logger.warning(f"Invalid jointId: {index + 1}")
+
+            except Exception as e:
+                logger.error(e)
+
 
 class SimWindow(Qt3DExtras.Qt3DWindow):
     def __init__(self):
         super().__init__()
         self.rootEntity = Qt3DCore.QEntity()
         self.defaultFrameGraph().setClearColor(QtGui.QColor("black"))
-        self.robot_arm = RoboticArm()
+        self.robot_arm = RoboticArm() 
         self.setup_models()
+        logger.debug("Initilised SimWinodw")
         # self.setup_scene()
+
+    def get_robot_arm(self):
+        return self.robot_arm
 
     def setup_scene(self):
         # Camera setup
@@ -139,14 +193,14 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
                                               name = "Segment1",
                                               color = "yellow",
                                               length = 50,
-                                              theta = (90 + 20),
+                                              theta = 0,
                                               jointP = QVector3D(0, 0, 0),
                                               ))
         self.robot_arm.add_segment(ArmSegment(self.rootEntity,
                                               name = "Segment2",
                                               color = "cyan",
                                               length = 100,
-                                              theta = (180 - 45),
+                                              theta = 90,
                                               jointP = QVector3D(50, 0, 0),
                                               ))
         # self.robot_arm.add_segment(ArmSegment(self.rootEntity,
@@ -159,7 +213,7 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
         self.robot_arm.add_segment(EndEffector(self.rootEntity,
                                               name = "End_effector",
                                               color = "green",
-                                              theta = (90 + 45),
+                                              theta = 0,
                                               jointP = QVector3D(150, 0, 0),
                                               ))
 
@@ -186,7 +240,7 @@ class SegmentControllWidget(QWidget):
                  name: str = "Segment1",
                  min_angle:int = 0,
                  max_angle:int = 180,
-                 angle_step:int = 1,
+                 angle_step:int = 4,
                  parent = None) -> None:
         super(SegmentControllWidget, self).__init__(parent)
         self.segment_id = segment_id
@@ -231,6 +285,8 @@ class SegmentControllWidget(QWidget):
         self.ui.length_spinbox.setMaximum(200)
         self.ui.length_spinbox.setMinimum(10)
 
+        logger.debug("Intilised segmentController")
+
     def start_increasing_angle(self):
         self.timer.timeout.connect(self.increment_angle)
         self.timer.start()
@@ -264,7 +320,7 @@ class SegmentControllWidget(QWidget):
         self.ui.length_spinbox.setValue(length)
 
     def emit_length_change(self, length):
-        Log.debug(f"New length: {length}")
+        logger.debug(f"New length: {length}")
         self.lengthChanged.emit(self.segment_id, length)
 
     def set_max_angle(self, max_angle:int):
@@ -299,6 +355,8 @@ class ControlPanel(QWidget):
 
         self.setLayout(self.main_layout)
 
+        logger.debug("Initilised ControlPanel")
+
     def set_top_bar(self, top_bar):
         self.top_bar = top_bar
         for i, seg_controller in enumerate(self.segment_controllers):
@@ -332,6 +390,7 @@ class ControlPanel(QWidget):
         for index, _ in enumerate(self.segment_controllers):
             seg = self.robot_arm.get_seg(index)
             position_label = self.position_frames[index]
+            logger.debug(index)
             position_label.setText(seg.pretty_str(index))
 
     def emit_angle_change(self, index, value):
@@ -361,27 +420,33 @@ class MainWindow(QMainWindow):
         right_sidebar_layout = QVBoxLayout(self.ui.right_sidebar)
         right_sidebar_layout.addWidget(self.controlPanel)
 
-
-        # WS Client
-        self.ws_client = WebSocketClient()
-        # self.ws_client.onRecievedCommand.connect(self.handle_command)
-        botom_bar = QVBoxLayout(self.ui.bottom_menubar)
-        botom_bar.addWidget(self.ws_client)
-
         
         # setup lightning, camera etc
         self.sim_window.setup_scene()
 
+        # self.sim_window.robot_arm.update_angle(0, 45)
+        # WS Client
+
+        self.ws_client = WebSocketClient(self.sim_window.get_robot_arm())
+        # self.ws_client.set_robot_arm(self.sim_window.get_robot_arm())
+        self.controlPanel.angleChanged.connect(self.ws_client.send_position_update)
+        # self.sim_window.robot_arm.angleUpdated.connect(self.ws_client.send_position_update)
+        # self.ws_client.onRecievedCommand.connect(self.handle_command)
+        botom_bar = QVBoxLayout(self.ui.bottom_menubar)
+        botom_bar.addWidget(self.ws_client)
+
+        self.controlPanel.set_robot_arm_controller(self.sim_window.robot_arm)
         # Signals-slots
         self.controlPanel.angleChanged.connect(self.sim_window.robot_arm.update_angle)
         self.controlPanel.lengthChanged.connect(self.sim_window.robot_arm.update_length)
-        # self.sim_window.robot_arm.update_angle(0, 45)
 
-        self.controlPanel.set_robot_arm_controller(self.sim_window.robot_arm)
 
         # TopBar
         top_bar = QHBoxLayout(self.ui.top_bar)
         self.controlPanel.set_top_bar(top_bar)
+
+
+        logger.debug("Intislised MainWindow")
 
     def complete_setup(self):
         pass
