@@ -39,6 +39,7 @@ install_project() {
 # Set session-long variables
 alias start-app=start_project
 alias install-app=install_project
+alias win-start="$REPO_ROOT/scripts/win-start.sh"
 
 
 
