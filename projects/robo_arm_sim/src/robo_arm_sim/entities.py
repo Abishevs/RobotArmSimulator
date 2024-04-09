@@ -7,11 +7,11 @@ from robo_arm_sim.controllers import JointTransformController
 
 class GenericEntity:
     def __init__(self, 
-                 parent = None, 
+                 parent=None,
                  color: str = "yellow",
                  scale: float = 0.1,
                  name: str = "Base",
-                 position: QVector3D = QVector3D(0,0,0),
+                 position: QVector3D = QVector3D(0, 0, 0),
                  jointP: QVector3D = QVector3D(0,0,0)) -> None:
         self.entity = Qt3DCore.QEntity(parent)
         self.color = color

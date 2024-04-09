@@ -10,6 +10,7 @@ from robo_arm_sim.entities import ArmSegment, BasePlate
 
 logger = logging.getLogger(__name__)
 
+
 class RoboticArm(QObject):
     angleUpdated = Signal(int, float)
     # lengthUpdated = Signal(int, float)
@@ -44,7 +45,7 @@ class RoboticArm(QObject):
     def get_length(self, index: int) -> float:
         return self.get_seg(index).length
 
-    def update_length(self, index:int, length:float):
+    def update_length(self, index: int, length: float):
         seg = self.segments[index]
         seg.set_length(length)
         logger.debug(f"seg {seg.name} length: {seg.length}")
@@ -59,21 +60,24 @@ class RoboticArm(QObject):
         logger.debug(f"End effectors x,y: {EF.get_endp_str()}. Theta: {EF.get_theta_str()}")
 
     def forward_kinematics(self):
-        """Calculate new postions and updates it gets called on angle changes"""
+        """Calculate new postions and updates it gets called on angle changes
+        """
         first_seg = self.segments[0]
-        cummulativ_angle = first_seg.theta # Initiate angle
-        prev_x, prev_y = first_seg.jointP.x(), first_seg.jointP.y() # get base jointP
+        cummulativ_angle = first_seg.theta  # Initiate angle
+        # get base jointP
+        prev_x, prev_y = first_seg.jointP.x(), first_seg.jointP.y()
 
         for i, seg in enumerate(self.segments):
             cummulativ_angle += seg.theta
             logger.debug(f"seg: {seg.name}: Theta: {self.get_angle(i)}")
 
             # Calc curr seg endP
-            new_x = prev_x + seg.length * math.cos(np.deg2rad(cummulativ_angle))
-            new_y = prev_y + seg.length * math.sin(np.deg2rad(cummulativ_angle))
+            dx = seg.length * math.cos(np.deg2rad(cummulativ_angle))
+            dy = seg.length * math.sin(np.deg2rad(cummulativ_angle))
+            new_x, new_y = prev_x + dx, prev_y + dy
 
             # set newEndP
-            new_endP = QVector3D(new_x,new_y,0)
+            new_endP = QVector3D(new_x, new_y, 0)
             seg.endP = new_endP
 
             # apply transformation
@@ -88,8 +92,8 @@ class RoboticArm(QObject):
             prev_x, prev_y = new_x, new_y
 
     def get_current_positions(self):
-        """Returns a dict of currentAngles"""        
-        current_angles = {"positions": [] }
+        """Returns a dict of currentAngles"""
+        current_angles = {"positions": []}
         for i, _ in enumerate(self.segments):
             current_angle = {"jointId": i + 1, "currentAngle": self.get_angle(i)}
             current_angles["positions"].append(current_angle)

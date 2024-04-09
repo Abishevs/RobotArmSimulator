@@ -26,6 +26,7 @@ from commonlib.json_schema import validate_message
 # Init logger
 logger = logging.getLogger(__name__)
 
+
 class WebSocketClient(QWidget):
     onRecievedCommand = Signal(str)
 
@@ -38,7 +39,7 @@ class WebSocketClient(QWidget):
         self.websocket.textMessageReceived.connect(self.on_text_message_received)
         self.websocket.errorOccurred.connect(self.on_error)
 
-        self.robotic_arm: RoboticArm = robot_arm 
+        self.robotic_arm: RoboticArm = robot_arm
         self.identifier: Identifier = Identifier.GUI
 
         self.host_text = QLabel(f"Server IP: '{self.host}'")
