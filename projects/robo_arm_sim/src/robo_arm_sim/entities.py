@@ -1,3 +1,4 @@
+from typing import Optional
 from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
@@ -39,7 +40,7 @@ class GenericEntity:
 
     def pretty_str(self, index) -> str:
         endP = self.get_endp_str()
-        theta = self.get_theta_str()
+        theta = self.get_theta_str(index)
         return f"{self.name}: (X: {endP[0]}, Y: {endP[1]}, {THETA_UNICODE}<sub>{index+1}</sub>: {theta})"
 
     def add_mesh(self, mesh):
@@ -62,8 +63,11 @@ class GenericEntity:
         x,y = f"{x:.2f}", f"{y:.2f}"
         return x,y
     
-    def get_theta_str(self):
-        return f"{self.theta:.2f}"
+    def get_theta_str(self, index: Optional[int] = None):
+        if index is None:
+            return f"{self.theta:.2f}"
+        theta = self.theta * 2 if index == 0 else self.theta + 90
+        return f"{theta:.2f}"
 
 class BasePlate(Qt3DCore.QEntity):
     """Default Base for robotic arm. For connecting the first element

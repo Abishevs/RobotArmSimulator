@@ -201,7 +201,7 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
                                               name = "Segment2",
                                               color = "cyan",
                                               length = 100,
-                                              theta = 90,
+                                              theta = 0,
                                               jointP = QVector3D(50, 0, 0),
                                               ))
         # self.robot_arm.add_segment(ArmSegment(self.rootEntity,
