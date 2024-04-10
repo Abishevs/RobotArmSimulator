@@ -199,6 +199,9 @@ class WebSocketServer:
         finally:
             self.state_manager.disconnect_client(websocket)
 
+    async def broadcast_all(self, data: Dict):
+        pass
+
     async def process_message(self,
                               websocket: WebSocketServerProtocol,
                               msg_data: Dict) -> None:
@@ -214,10 +217,11 @@ class WebSocketServer:
                     # No IRL connected
                     logger.error("Managed client not connected")
                     # Send this back to controller
-                    return
+                    # return
+                else:
 
-                await self.state_manager.managed_client.websocket.send(data)
-                logger.info("Send new positins to managed client")
+                    await self.state_manager.managed_client.websocket.send(data)
+                    logger.info("Send new positins to managed client")
 
                 for viewer in self.state_manager.viewer_clients:
                     await viewer.websocket.send(data)
