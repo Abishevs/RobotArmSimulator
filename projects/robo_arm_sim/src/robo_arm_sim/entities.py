@@ -1,10 +1,12 @@
 from typing import Optional
+
 from PySide6.QtGui import (QColor, QVector3D)
 from PySide6.Qt3DCore import Qt3DCore
 from PySide6.Qt3DExtras import Qt3DExtras
-from robo_arm_sim.constants import THETA_UNICODE
 
+from robo_arm_sim.constants import THETA_UNICODE
 from robo_arm_sim.controllers import JointTransformController
+
 
 class GenericEntity:
     def __init__(self, 
@@ -68,6 +70,7 @@ class GenericEntity:
             return f"{self.theta:.2f}"
         theta = self.theta * 2 if index == 0 else self.theta + 90
         return f"{theta:.2f}"
+
 
 class BasePlate(Qt3DCore.QEntity):
     """Default Base for robotic arm. For connecting the first element
@@ -147,6 +150,7 @@ class Joint(GenericEntity):
         jointMesh.setLength(self.length)
         self.add_mesh(jointMesh)
         self.transform.setRotationX(90)
+
 
 class ArmSegment(GenericEntity):
     def __init__(self,
@@ -238,4 +242,3 @@ class EndEffector(GenericEntity):
 
         self.entity.addComponent(self.material)
         self.entity.addComponent(self.segment_transform)
-

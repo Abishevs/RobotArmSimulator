@@ -1,8 +1,8 @@
 import logging
-import numpy as np
 import math
 from typing import List
 
+import numpy as np
 from PySide6.QtCore import (QObject, QPropertyAnimation, Signal)
 from PySide6.QtGui import (QVector3D)
 
@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class RoboticArm(QObject):
-    angleUpdated = Signal(int, float)
-    # lengthUpdated = Signal(int, float)
+    angle_updated = Signal(int, float)
+    # length_updated = Signal(int, float)
 
     def __init__(self):
         self.base: BasePlate

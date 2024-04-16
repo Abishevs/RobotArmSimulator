@@ -48,8 +48,6 @@ class JointTransformController(QObject):
         if self._target is not None:
             self._target.setMatrix(self._matrix)
 
-        # print(f"X: {p.x()}, Y:{p.y()}")
-
     angle_changed = Signal()
     angle = Property(float, get_angle, set_angle, notify=angle_changed)
 

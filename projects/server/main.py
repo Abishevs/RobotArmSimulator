@@ -8,7 +8,6 @@ from ws_server.ws_server import WebSocketServer
 from commonlib.logger import setup_logging
 
 
-
 async def main():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     load_dotenv()

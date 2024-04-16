@@ -1,7 +1,7 @@
 import os
 import sys
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 from PySide6.QtWidgets import QApplication
 
 from robo_arm_sim.views import MainWindow

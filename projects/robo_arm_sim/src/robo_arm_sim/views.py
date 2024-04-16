@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class WebSocketClient(QWidget):
-    onRecievedCommand = Signal(str)
+    on_recieved_command = Signal(str)
 
     def __init__(self, robot_arm, host: str = "ws://localhost:8000", ):
         super().__init__()
@@ -118,7 +118,7 @@ class WebSocketClient(QWidget):
     @Slot(str)
     def on_text_message_received(self, message):
         logger.info(f"Message from server: {message}")
-        self.onRecievedCommand.emit(message)
+        self.on_recieved_command.emit(message)
         data = json.loads(message)
         try:
             validate_message(data)
@@ -233,8 +233,8 @@ class SimWindow(Qt3DExtras.Qt3DWindow):
         self.groundEntity.addComponent(self.groundTransform)
 
 class SegmentControllWidget(QWidget):
-    angleChanged = Signal(int, float)
-    lengthChanged = Signal(int, float) 
+    angle_changed = Signal(int, float)
+    length_changed = Signal(int, float) 
 
     def __init__(self,
                  segment_id: int, 
@@ -315,14 +315,14 @@ class SegmentControllWidget(QWidget):
 
     def emit_angle_change(self, angle):
         self.set_angle(angle)
-        self.angleChanged.emit(self.segment_id, angle)
+        self.angle_changed.emit(self.segment_id, angle)
 
     def set_length(self, length: float):
         self.ui.length_spinbox.setValue(length)
 
     def emit_length_change(self, length):
         logger.debug(f"New length: {length}")
-        self.lengthChanged.emit(self.segment_id, length)
+        self.length_changed.emit(self.segment_id, length)
 
     def set_max_angle(self, max_angle:int):
         self.max_angle = max_angle
@@ -335,8 +335,8 @@ class SegmentControllWidget(QWidget):
         self.ui.angle_slider.setMinimum(self.min_angle)
 
 class ControlPanel(QWidget):
-    angleChanged = Signal(int, float)
-    lengthChanged = Signal(int, float)
+    angle_changed = Signal(int, float)
+    length_changed = Signal(int, float)
 
     def __init__(self, parent=None):
         super(ControlPanel, self).__init__(parent)
@@ -377,8 +377,8 @@ class ControlPanel(QWidget):
 
     def add_segment_controller(self, segment_id, **kwargs):
         segment_controll = SegmentControllWidget(segment_id, parent=self, **kwargs)
-        segment_controll.angleChanged.connect(self.emit_angle_change)
-        segment_controll.lengthChanged.connect(self.emit_length_change)
+        segment_controll.angle_changed.connect(self.emit_angle_change)
+        segment_controll.length_changed.connect(self.emit_length_change)
         # segment_controll.set_length(self.robot_arm.segments[segment_id].length)
         self.segment_controllers.append(segment_controll)
         self.main_layout.addWidget(segment_controll)
@@ -395,11 +395,11 @@ class ControlPanel(QWidget):
             position_label.setText(seg.pretty_str(index))
 
     def emit_angle_change(self, index, value):
-        self.angleChanged.emit(index, value)
+        self.angle_changed.emit(index, value)
         self.update_seg_label()
 
     def emit_length_change(self, index, value):
-        self.lengthChanged.emit(index, value)
+        self.length_changed.emit(index, value)
         self.update_seg_label()
 
 class MainWindow(QMainWindow):
@@ -451,8 +451,3 @@ class MainWindow(QMainWindow):
 
     def complete_setup(self):
         pass
-
-    # @Slot(str)
-    # def handle_command(self, msg):
-    #     self.recieve_label.setText(f"Got from server: {msg}")
-

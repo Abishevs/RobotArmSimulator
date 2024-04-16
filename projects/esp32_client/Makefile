@@ -1,7 +1,7 @@
 # Makefile for Arduino sketches
 # Update these variables according to your project
 
-SKETCH := json_test/json_test.ino
+SKETCH := main/main.ino
 PORT := /dev/ttyUSB0
 FQBN := esp32:esp32:esp32
 
