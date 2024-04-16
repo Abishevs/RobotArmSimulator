@@ -81,9 +81,9 @@ class RoboticArm(QObject):
             seg.endP = new_endP
 
             # apply transformation
-            seg.controller.setRotationPoint(seg.jointP)
+            seg.controller.set_rotation_point(seg.jointP)
             logger.debug(f"seg: {seg.name}: jointP: {seg.jointP}")
-            seg.controller.setAngle(cummulativ_angle)
+            seg.controller.set_angle(cummulativ_angle)
 
             # set currents seg endP as next seg JointP
             if i < len(self.segments) - 1:

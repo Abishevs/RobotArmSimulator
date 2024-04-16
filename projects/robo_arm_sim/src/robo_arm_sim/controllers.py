@@ -3,6 +3,9 @@ from PySide6.QtGui import ( QMatrix4x4, QQuaternion, QVector3D)
 from PySide6.Qt3DCore import Qt3DCore
 
 class JointTransformController(QObject):
+    """
+    Handles 3D scene segment position and rotation via a single 4x4Matrix
+    """
     def __init__(self, parent:Qt3DCore.QTransform):
         super().__init__(parent)
         self._target = None | Qt3DCore.QTransform
@@ -11,30 +14,30 @@ class JointTransformController(QObject):
         self._jointP = QVector3D()
         self._axis = QVector3D(0,0,1)
 
-    def setTarget(self, t):
+    def set_target(self, t):
         self._target = t
 
-    def getTarget(self):
+    def get_target(self):
         return self._target
 
-    def setRotationPoint(self, point: QVector3D):
+    def set_rotation_point(self, point: QVector3D):
         self._jointP = point
-        self.updateMatrix()
+        self.update_matrix()
 
-    def getRotationPoint(self):
+    def get_rotation_point(self):
         return self._jointP
 
-    def setAngle(self, angle):
+    def set_angle(self, angle):
         if self._angle != angle:
             self._angle = angle
-            self.updateMatrix()
-            self.angleChanged.emit()
+            self.update_matrix()
+            self.angle_changed.emit()
 
 
-    def getAngle(self):
+    def get_angle(self):
         return self._angle
 
-    def updateMatrix(self):
+    def update_matrix(self):
         self._matrix.setToIdentity()
         self._matrix.scale(0.1)
         # 1) Translate to new rotation point
@@ -47,7 +50,7 @@ class JointTransformController(QObject):
 
         # print(f"X: {p.x()}, Y:{p.y()}")
 
-    angleChanged = Signal()
-    angle = Property(float, getAngle, setAngle, notify=angleChanged)
+    angle_changed = Signal()
+    angle = Property(float, get_angle, set_angle, notify=angle_changed)
 
 

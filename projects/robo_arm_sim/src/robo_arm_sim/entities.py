@@ -184,8 +184,8 @@ class ArmSegment(GenericEntity):
 
 
         self.controller = JointTransformController(self.transform)
-        self.controller.setTarget(self.transform)
-        self.controller.setRotationPoint(self.jointP)
+        self.controller.set_target(self.transform)
+        self.controller.set_rotation_point(self.jointP)
 
         self.entity.addComponent(self.material)
 
@@ -233,8 +233,8 @@ class EndEffector(GenericEntity):
         self.segment_transform.setTranslation(self.jointP)
 
         self.controller = JointTransformController(self.segment_transform)
-        self.controller.setTarget(self.segment_transform)
-        self.controller.setRotationPoint(self.jointP)
+        self.controller.set_target(self.segment_transform)
+        self.controller.set_rotation_point(self.jointP)
 
         self.entity.addComponent(self.material)
         self.entity.addComponent(self.segment_transform)
