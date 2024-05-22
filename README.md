@@ -1,5 +1,4 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-24ddc0f5d75046c5622901739e7c5dd533143b0c8e959d652212380cedb1ea36.svg)](https://classroom.github.com/a/hzCHf1-n)
-# RoboArmSimulator 
+# Robot Arm Simulator 
 
 ## Beskrivning
 Ett huvud Desktop GUI för att kontrollera ett riktigt robot arm. GUI
@@ -23,15 +22,11 @@ source scripts/setup.sh
 install-app <app-name>
 start-app <app-name>
 ```
-<app-name>: [server, robo_arm_sim]
+app-name := [server, robo_arm_sim]
 
 ## Teknologier
 Till projektets GUI program användes PySide6. 
 För server användes websocket bibliotek tillsammans med asyncio
-
-
-## Bidra
-Detta är ett projekt i kursen Programmering 2 på NTI Gymnasiet Nacka VT24. Då projektet kommer att bedömas och användas som betygsunderlag tillåts inga pull-requests eller kommentarer kring projektet. Var vänlig respektera detta.
 
 ## Licens
 
@@ -40,6 +35,3 @@ Projektet är släppt under MIT:s licens.
 ## Författare
 
 Eduards Abisevs [GitHub](https://github.com/Abishevs)
-
-## Donations
-[BuyMeACoffe](hah_sike_swisha_mig)
