@@ -430,7 +430,7 @@ class MainWindow(QMainWindow):
 
         self.ws_client = WebSocketClient(self.sim_window.get_robot_arm())
         # self.ws_client.set_robot_arm(self.sim_window.get_robot_arm())
-        self.controlPanel.angleChanged.connect(self.ws_client.send_position_update)
+        self.controlPanel.angle_changed.connect(self.ws_client.send_position_update)
         # self.sim_window.robot_arm.angleUpdated.connect(self.ws_client.send_position_update)
         # self.ws_client.onRecievedCommand.connect(self.handle_command)
         botom_bar = QVBoxLayout(self.ui.bottom_menubar)
@@ -438,8 +438,8 @@ class MainWindow(QMainWindow):
 
         self.controlPanel.set_robot_arm_controller(self.sim_window.robot_arm)
         # Signals-slots
-        self.controlPanel.angleChanged.connect(self.sim_window.robot_arm.update_angle)
-        self.controlPanel.lengthChanged.connect(self.sim_window.robot_arm.update_length)
+        self.controlPanel.angle_changed.connect(self.sim_window.robot_arm.update_angle)
+        self.controlPanel.length_changed.connect(self.sim_window.robot_arm.update_length)
 
 
         # TopBar

@@ -1,0 +1,142 @@
+\documentclass[twocolumn]{article}
+\usepackage{graphicx}  % For including images
+\usepackage{hyperref}  % For clickable links in table of contents
+\usepackage{amsmath}   % For math symbols and formatting
+\usepackage{listings}  % For code snippets
+\usepackage{geometry}  % For page layout
+
+\geometry{a4paper, margin=1in}
+
+\title{Design and Refactoring \\ of a  \\ 3D Robotic Arm Control System}
+\author{Eduards Abisevs}
+\date{\today}
+
+\begin{document}
+
+% Single column for title and abstract
+\onecolumn
+\maketitle
+
+\begin{abstract}
+This report documents the design and refactoring process of a 3D robotic arm control system implemented using PySide6 for the GUI and ESP32 for hardware control. It includes an analysis of the original system design, the challenges encountered, and the improvements made during the refactoring process. The final system demonstrates enhanced modularity, maintainability, and performance.
+\end{abstract}
+
+\newpage  % Start TOC on a new page
+\tableofcontents
+\newpage
+
+% Switch back to two-column layout after TOC
+\twocolumn
+
+
+% Introduction
+\section{Introduction}
+\subsection{Project Background}
+Provide context for the project, explaining the motivation behind controlling a 3D robotic arm via GUI and ESP32.
+
+\subsection{Objectives}
+State the main goals, both in the original implementation and in the refactor (e.g., modularity, reduced dependencies, better performance).
+
+\subsection{Overview}
+Briefly outline the structure of the report, touching on both the original system and the planned refactoring.
+
+% Current System Overview
+\section{Current System Overview}
+\subsection{System Architecture}
+Describe the architecture, including hardware and software components. Use diagrams where necessary.
+
+\subsection{How it Works}
+Explain the flow of data and interaction between the components (e.g., GUI inputs, WebSocket server, servo motor control).
+
+\subsection{Advantages}
+List the strengths of the current implementation, such as modular project structure and ease of deployment.
+
+\subsection{Challenges}
+Highlight problem areas, such as circular dependencies in the GUI or limitations in communication between components.
+
+% Refactoring Motivation
+\section{Refactoring Motivation}
+\subsection{Problem Areas}
+Go into more detail on the problems identified in the current system, such as maintainability issues or performance bottlenecks.
+
+\subsection{Refactoring Goals}
+List the goals of the refactoring process. For example, improved modularity, reduced circular dependencies, and optimized communication.
+
+% Refactoring Design & New Architecture
+\section{Refactoring Design \& New Architecture}
+\subsection{New System Overview}
+Provide an updated system architecture that reflects the refactored system. Include diagrams showing the new modular design.
+
+\subsection{GUI Refactor}
+Discuss the changes made to the PySide6 GUI, such as resolving circular dependencies or improving the event flow.
+
+\subsection{Backend Refactor}
+Describe any improvements to the WebSocket server or backend communication protocols.
+
+\subsection{New Features}
+Detail any new features or functionality introduced during the refactoring process, such as the ability to update Wi-Fi credentials dynamically.
+
+\subsection{Code Examples}
+Provide code snippets that show key improvements. Use a side-by-side comparison to highlight how the refactor improves the code.
+
+\newpage
+
+% Implementation & Testing
+\section{Implementation \& Testing}
+\subsection{Step-by-Step Implementation}
+Explain how the refactor was implemented, including any challenges or roadblocks encountered.
+
+\subsection{Testing the New Design}
+Discuss the testing process, including unit testing, integration testing, and performance testing.
+
+\subsection{Challenges During Refactoring}
+Highlight any new issues that arose during the refactoring process and how they were resolved.
+
+% Results
+\section{Results}
+\subsection{Before and After Comparison}
+Provide a comparison of the old and new systems, focusing on performance metrics, code maintainability, and system scalability.
+
+\subsection{Performance Metrics}
+Include any specific performance improvements, such as reduced latency or faster communication times.
+
+\subsection{Modularity and Scalability}
+Discuss how the new design improves modularity, making the system easier to extend in the future.
+
+% Discussion
+\section{Discussion}
+\subsection{Analysis}
+Reflect on the overall effectiveness of the refactoring. Was it successful in addressing the original challenges?
+
+\subsection{Lessons Learned}
+Discuss what you learned throughout the refactoring process, both technically and in terms of project management.
+
+% Future Work
+\section{Future Work}
+\subsection{Further Improvements}
+Mention any additional changes or improvements that could be made in future iterations of the project.
+
+\subsection{Next Steps}
+Outline potential future developments, such as adding more advanced arm control or expanding the GUI.
+
+% Conclusion
+\section{Conclusion}
+Summarize the key takeaways from the project, focusing on the success of the refactoring process and the final outcome.
+
+% References
+\section{References}
+List any sources, documentation, or references used throughout the project.
+
+% Appendices
+\newpage
+\onecolumn
+\appendix
+\section{Appendices}
+\subsection{Code Listings}
+Include full code listings if necessary, or link to a GitHub repository.
+
+\subsection{Additional Diagrams}
+Any additional diagrams or technical schematics can be included here.
+
+\end{document}
+
